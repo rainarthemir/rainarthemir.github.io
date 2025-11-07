@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Админка проектов</title>
+<link rel="stylesheet" href="style.css">
 <style>
-body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-h1 { margin-bottom: 20px; }
 #project-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 #project-form input { padding: 8px; font-size: 16px; }
 #buttons { display: flex; flex-direction: column; gap: 10px; width: 500px; }
@@ -36,16 +35,23 @@ button:hover { background: #005a9e; }
 
 <script>
 const API_URL = "https://projects.dmytrothemir.workers.dev/";
-let TOKEN = "Bearer SECRET_TOKEN"; // твой токен
 
-function logout() {
-  TOKEN = "";
-  document.getElementById("project-form").style.display = "none";
-  document.getElementById("buttons").innerHTML = "Вы вышли из админки";
+// Проверка авторизации при загрузке панели
+const TOKEN = localStorage.getItem("authToken");
+const loggedIn = localStorage.getItem("loggedIn");
+
+if (!TOKEN || loggedIn !== "true") {
+  window.location.href = "login.html";
 }
 
-document.getElementById("logoutBtn").addEventListener("click", logout);
+// Logout
+document.getElementById("logoutBtn").onclick = () => {
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("loggedIn");
+  window.location.href = "login.html";
+};
 
+// Загрузка проектов
 async function loadProjects() {
   const container = document.getElementById("buttons");
   container.innerHTML = "";
@@ -93,8 +99,10 @@ async function loadProjects() {
   }
 }
 
+// Добавление проекта
 async function addProject() {
-  if (!TOKEN) return alert("Вы не авторизованы");
+  const token = localStorage.getItem("authToken");
+  if (!token) return alert("Вы не авторизованы");
 
   const name = document.getElementById("name").value.trim();
   const color = document.getElementById("color").value;
@@ -104,9 +112,10 @@ async function addProject() {
 
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": TOKEN },
+    headers: { "Content-Type": "application/json", "Authorization": token },
     body: JSON.stringify({ name, color, link })
   });
+
   const result = await res.json();
   if (result.success) {
     document.getElementById("name").value = "";
@@ -115,8 +124,10 @@ async function addProject() {
   } else alert(result.error);
 }
 
+// Редактирование проекта
 async function editProject(oldName, oldColor, oldLink) {
-  if (!TOKEN) return alert("Вы не авторизованы");
+  const token = localStorage.getItem("authToken");
+  if (!token) return alert("Вы не авторизованы");
 
   const name = prompt("Новое название:", oldName);
   if (!name) return;
@@ -127,21 +138,25 @@ async function editProject(oldName, oldColor, oldLink) {
 
   const res = await fetch(API_URL, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", "Authorization": TOKEN },
+    headers: { "Content-Type": "application/json", "Authorization": token },
     body: JSON.stringify({ oldName, name, color, link })
   });
+
   const result = await res.json();
   if (result.success) loadProjects();
   else alert(result.error);
 }
 
+// Удаление проекта
 async function deleteProject(name) {
-  if (!TOKEN) return alert("Вы не авторизованы");
+  const token = localStorage.getItem("authToken");
+  if (!token) return alert("Вы не авторизованы");
+
   if (!confirm(`Удалить проект "${name}"?`)) return;
 
   const res = await fetch(API_URL, {
     method: "DELETE",
-    headers: { "Content-Type": "application/json", "Authorization": TOKEN },
+    headers: { "Content-Type": "application/json", "Authorization": token },
     body: JSON.stringify({ name })
   });
 
@@ -150,8 +165,10 @@ async function deleteProject(name) {
   else alert(result.error);
 }
 
+// Привязка кнопки добавить
 document.getElementById("addBtn").addEventListener("click", addProject);
 
+// Инициализация
 loadProjects();
 </script>
 
