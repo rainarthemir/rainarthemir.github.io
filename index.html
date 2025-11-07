@@ -20,25 +20,22 @@
 <script>
 async function loadProjects() {
   try {
-    // URL воркера projects
     const res = await fetch("https://projects.dmytrothemir.workers.dev/", {
-      method: "GET",
-      headers: {
-        // Если у тебя есть токен для публичного отображения, можно убрать Authorization
-        // "Authorization": "Bearer SECRET_TOKEN"
-      }
+      method: "GET"
+      // Для публичного отображения можно без токена
+      // headers: { "Authorization": "Bearer SECRET_TOKEN" }
     });
 
     const data = await res.json();
     if (!data.success) throw new Error(data.error || "Ошибка загрузки проектов");
 
-    const projects = data.projects; // массив объектов {id, name, color}
+    const projects = data.projects; // массив объектов {name, color, link}
     const container = document.getElementById("buttons");
     container.innerHTML = "";
 
     projects.forEach(p => {
       const a = document.createElement("a");
-      a.href = p.url || "#"; // если есть url
+      a.href = p.link || "#"; // теперь берём link из базы
       a.textContent = p.name;
       a.className = "project-button";
       a.style.backgroundColor = p.color || "#0078d4";
