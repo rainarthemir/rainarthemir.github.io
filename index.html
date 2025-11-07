@@ -19,20 +19,39 @@
 
 <script>
 async function loadProjects() {
-  const res = await fetch("projects.json");
-  const projects = await res.json();
-  const container = document.getElementById("buttons");
-  container.innerHTML = "";
-  projects.forEach(p => {
-    const a = document.createElement("a");
-    a.href = p.url;
-    a.textContent = p.name;
-    a.className = "project-button";
-    a.style.backgroundColor = p.color;
-    a.target = "_blank";
-    container.appendChild(a);
-  });
+  try {
+    // URL воркера projects
+    const res = await fetch("https://projects.dmytrothemir.workers.dev/", {
+      method: "GET",
+      headers: {
+        // Если у тебя есть токен для публичного отображения, можно убрать Authorization
+        // "Authorization": "Bearer SECRET_TOKEN"
+      }
+    });
+
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "Ошибка загрузки проектов");
+
+    const projects = data.projects; // массив объектов {id, name, color}
+    const container = document.getElementById("buttons");
+    container.innerHTML = "";
+
+    projects.forEach(p => {
+      const a = document.createElement("a");
+      a.href = p.url || "#"; // если есть url
+      a.textContent = p.name;
+      a.className = "project-button";
+      a.style.backgroundColor = p.color || "#0078d4";
+      a.target = "_blank";
+      container.appendChild(a);
+    });
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("buttons").innerHTML = "Не удалось загрузить проекты";
+  }
 }
+
 loadProjects();
 </script>
 
