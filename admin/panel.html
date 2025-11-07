@@ -7,21 +7,27 @@
 <style>
 body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 h1 { margin-bottom: 20px; }
-#project-form { display: flex; gap: 10px; margin-bottom: 20px; }
+#project-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 #project-form input { padding: 8px; font-size: 16px; }
-#buttons { display: flex; flex-direction: column; gap: 10px; width: 400px; }
+#buttons { display: flex; flex-direction: column; gap: 10px; width: 500px; }
 .project-item { display: flex; align-items: center; justify-content: space-between; padding: 5px; background: #fff; border-radius: 6px; }
+.project-info { display: flex; gap: 10px; align-items: center; }
 .project-name { padding: 6px 10px; border-radius: 6px; color: white; }
 button { padding: 5px 10px; cursor: pointer; border-radius: 5px; border: none; background: #0078d4; color: white; transition: 0.2s; }
 button:hover { background: #005a9e; }
+#logoutBtn { margin-bottom: 20px; background: #d9534f; }
+#logoutBtn:hover { background: #b52b2b; }
 </style>
 </head>
 <body>
 
 <h1>Админка проектов</h1>
 
+<button id="logoutBtn">Выйти</button>
+
 <div id="project-form">
   <input type="text" id="name" placeholder="Название проекта">
+  <input type="url" id="link" placeholder="Ссылка проекта">
   <input type="color" id="color" value="#0078d4">
   <button id="addBtn">Добавить</button>
 </div>
@@ -30,7 +36,15 @@ button:hover { background: #005a9e; }
 
 <script>
 const API_URL = "https://projects.dmytrothemir.workers.dev/";
-const TOKEN = "Bearer SECRET_TOKEN"; // вставь свой токен
+let TOKEN = "Bearer SECRET_TOKEN"; // твой токен
+
+function logout() {
+  TOKEN = "";
+  document.getElementById("project-form").style.display = "none";
+  document.getElementById("buttons").innerHTML = "Вы вышли из админки";
+}
+
+document.getElementById("logoutBtn").addEventListener("click", logout);
 
 async function loadProjects() {
   const container = document.getElementById("buttons");
@@ -44,20 +58,31 @@ async function loadProjects() {
       const div = document.createElement("div");
       div.className = "project-item";
 
+      const info = document.createElement("div");
+      info.className = "project-info";
+
       const span = document.createElement("span");
       span.textContent = p.name;
       span.className = "project-name";
       span.style.backgroundColor = p.color;
 
+      const link = document.createElement("a");
+      link.href = p.link || "#";
+      link.textContent = "Ссылка";
+      link.target = "_blank";
+
+      info.appendChild(span);
+      info.appendChild(link);
+
       const editBtn = document.createElement("button");
       editBtn.textContent = "Редактировать";
-      editBtn.onclick = () => editProject(p.name);
+      editBtn.onclick = () => editProject(p.name, p.color, p.link);
 
       const deleteBtn = document.createElement("button");
       deleteBtn.textContent = "Удалить";
       deleteBtn.onclick = () => deleteProject(p.name);
 
-      div.appendChild(span);
+      div.appendChild(info);
       div.appendChild(editBtn);
       div.appendChild(deleteBtn);
       container.appendChild(div);
@@ -69,32 +94,41 @@ async function loadProjects() {
 }
 
 async function addProject() {
+  if (!TOKEN) return alert("Вы не авторизованы");
+
   const name = document.getElementById("name").value.trim();
   const color = document.getElementById("color").value;
+  const link = document.getElementById("link").value.trim();
+
   if (!name) return alert("Введите название");
 
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": TOKEN },
-    body: JSON.stringify({ name, color })
+    body: JSON.stringify({ name, color, link })
   });
   const result = await res.json();
   if (result.success) {
     document.getElementById("name").value = "";
+    document.getElementById("link").value = "";
     loadProjects();
   } else alert(result.error);
 }
 
-async function editProject(oldName) {
+async function editProject(oldName, oldColor, oldLink) {
+  if (!TOKEN) return alert("Вы не авторизованы");
+
   const name = prompt("Новое название:", oldName);
   if (!name) return;
-  const color = prompt("Новый цвет (hex):", "#0078d4");
+  const color = prompt("Новый цвет (hex):", oldColor);
   if (!color) return;
+  const link = prompt("Новая ссылка:", oldLink || "");
+  if (link === null) return;
 
   const res = await fetch(API_URL, {
     method: "PUT",
     headers: { "Content-Type": "application/json", "Authorization": TOKEN },
-    body: JSON.stringify({ oldName, name, color })
+    body: JSON.stringify({ oldName, name, color, link })
   });
   const result = await res.json();
   if (result.success) loadProjects();
@@ -102,12 +136,15 @@ async function editProject(oldName) {
 }
 
 async function deleteProject(name) {
+  if (!TOKEN) return alert("Вы не авторизованы");
   if (!confirm(`Удалить проект "${name}"?`)) return;
+
   const res = await fetch(API_URL, {
     method: "DELETE",
     headers: { "Content-Type": "application/json", "Authorization": TOKEN },
     body: JSON.stringify({ name })
   });
+
   const result = await res.json();
   if (result.success) loadProjects();
   else alert(result.error);
