@@ -1,26 +1,49 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Вход в админку</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<h2>Вход через GitHub</h2>
-
-<button id="loginBtn">Войти</button>
+<div class="login-container">
+  <h1>Вход в админку</h1>
+  <form id="loginForm">
+    <input type="text" name="username" placeholder="Логин" required>
+    <input type="password" name="password" placeholder="Пароль" required>
+    <button type="submit">Войти</button>
+  </form>
+  <div id="error" class="error"></div>
+</div>
 
 <script>
-  const CLIENT_ID = "Ov23liwAi6zS07ga1ZO2"; // сюда вставь свой Client ID
+const form = document.getElementById("loginForm");
+const errorDiv = document.getElementById("error");
 
-  document.getElementById("loginBtn").onclick = () => {
-    const redirect = "https://rainarthemir.github.io/admin/callback.html";
-    const scopes = "read:user";
-    
-    window.location = 
-      `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${redirect}&scope=${scopes}`;
-  };
+form.onsubmit = async (e) => {
+  e.preventDefault();
+  const username = form.username.value;
+  const password = form.password.value;
+
+  try {
+    const res = await fetch("https://auth.dmytrothemir.workers.dev/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem("loggedIn", "true");
+      window.location.href = "panel.html";
+    } else {
+      errorDiv.textContent = data.error || "Ошибка авторизации";
+    }
+  } catch (err) {
+    errorDiv.textContent = "Ошибка соединения";
+  }
+};
 </script>
-
 </body>
 </html>
