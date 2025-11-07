@@ -1,78 +1,40 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Мои проекты</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f2f5;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    h1 {
-      margin-bottom: 40px;
-      color: #333;
-    }
-
-    .button-container {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .project-button {
-      background-color: #0078d4;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      font-size: 18px;
-      cursor: pointer;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      text-align: center;
-      width: 300px;
-    }
-
-    .project-button:hover {
-      background-color: #005a9e;
-      transform: translateY(-3px);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мои проекты</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
+  h1 { margin-bottom: 30px; }
+  .button-container { display: flex; flex-direction: column; gap: 15px; width: 300px; }
+  .project-button { padding: 15px; font-size: 18px; border: none; border-radius: 8px; text-align: center; text-decoration: none; color: white; transition: all 0.2s ease; }
+  .project-button:hover { transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+</style>
 </head>
 <body>
 
-  <h1>Мои проекты</h1>
+<h1>Мои проекты</h1>
+<div class="button-container" id="buttons"></div>
 
-  <div class="button-container">
-    <a href="https://rainarthemir.github.io/ametis" class="project-button" target="_blank">
-      Лайв Отслеживание автобусов Аметис
-    </a>
-    <a href="https://rainarthemir.github.io/sncf" class="project-button" target="_blank">
-      Табло отправлений SNCF
-    </a>
-    <a href="https://rainarthemir.github.io/ametis/dpstopline" class="project-button" target="_blank">
-      Отправление по остановке и линии Аметис
-    </a>
-  </div>
-
-  <script>
-    // JS можно использовать, например, для логов кликов
-    const buttons = document.querySelectorAll('.project-button');
-    buttons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        console.log(`Переход на: ${btn.href}`);
-      });
-    });
-  </script>
+<script>
+async function loadProjects() {
+  const res = await fetch("projects.json");
+  const projects = await res.json();
+  const container = document.getElementById("buttons");
+  container.innerHTML = "";
+  projects.forEach(p => {
+    const a = document.createElement("a");
+    a.href = p.url;
+    a.textContent = p.name;
+    a.className = "project-button";
+    a.style.backgroundColor = p.color;
+    a.target = "_blank";
+    container.appendChild(a);
+  });
+}
+loadProjects();
+</script>
 
 </body>
 </html>
