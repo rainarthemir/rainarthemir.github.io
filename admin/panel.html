@@ -12,8 +12,7 @@
   <h1>Панель проектов</h1>
 
   <form id="addProjectForm">
-    <input type="text" name="title" placeholder="Название проекта" required>
-    <input type="url" name="url" placeholder="URL проекта" required>
+    <input type="text" name="name" placeholder="Название проекта" required>
     <input type="color" name="color" value="#0078d4">
     <button type="submit">Добавить проект</button>
   </form>
@@ -22,49 +21,89 @@
 </div>
 
 <script>
-// Проверка авторизации
 if (localStorage.getItem("loggedIn") !== "true") {
   window.location.href = "login.html";
 }
 
-// Logout
+const authToken = localStorage.getItem("authToken");
+
 document.getElementById("logoutBtn").onclick = () => {
   localStorage.removeItem("loggedIn");
+  localStorage.removeItem("authToken");
   window.location.href = "login.html";
 };
 
-// Добавление проектов
 const form = document.getElementById("addProjectForm");
 const projectsDiv = document.getElementById("projects");
 
-// Загружаем проекты из localStorage
-let projects = JSON.parse(localStorage.getItem("projects") || "[]");
-renderProjects();
+async function fetchProjects() {
+  try {
+    const res = await fetch("https://projects.dmytrothemir.workers.dev/", {
+      method: "GET",
+      headers: { "Authorization": authToken }
+    });
+    const data = await res.json();
+    if (data.success) renderProjects(data.projects);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function renderProjects(projects) {
+  projectsDiv.innerHTML = "";
+  projects.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "project-item";
+    div.style.backgroundColor = p.color;
+    div.textContent = p.name;
+
+    // Можно добавить редактирование
+    div.onclick = () => {
+      const newName = prompt("Название", p.name);
+      const newColor = prompt("Цвет (hex)", p.color);
+      if (newName && newColor) updateProject(p.id, newName, newColor);
+    };
+
+    projectsDiv.appendChild(div);
+  });
+}
+
+async function addProject(name, color) {
+  try {
+    await fetch("https://projects.dmytrothemir.workers.dev/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": authToken },
+      body: JSON.stringify({ name, color })
+    });
+    fetchProjects();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function updateProject(id, name, color) {
+  try {
+    await fetch("https://projects.dmytrothemir.workers.dev/", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "Authorization": authToken },
+      body: JSON.stringify({ id, name, color })
+    });
+    fetchProjects();
+  } catch (err) {
+    console.error(err);
+  }
+}
 
 form.onsubmit = (e) => {
   e.preventDefault();
-  const title = form.title.value;
-  const url = form.url.value;
+  const name = form.name.value;
   const color = form.color.value;
-
-  projects.push({ title, url, color });
-  localStorage.setItem("projects", JSON.stringify(projects));
-  renderProjects();
+  addProject(name, color);
   form.reset();
 };
 
-function renderProjects() {
-  projectsDiv.innerHTML = "";
-  projects.forEach(p => {
-    const a = document.createElement("a");
-    a.href = p.url;
-    a.target = "_blank";
-    a.textContent = p.title;
-    a.style.backgroundColor = p.color;
-    a.className = "project-button";
-    projectsDiv.appendChild(a);
-  });
-}
+// Загрузка проектов при старте
+fetchProjects();
 </script>
 </body>
 </html>
