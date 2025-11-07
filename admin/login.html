@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Вход в админку</title>
+</head>
+<body>
+
+<h2>Вход через GitHub</h2>
+
+<button id="loginBtn">Войти</button>
+
+<script>
+  const CLIENT_ID = "Ov23liwAi6zS07ga1ZO2"; // сюда вставь свой Client ID
+
+  document.getElementById("loginBtn").onclick = () => {
+    const redirect = "https://rainarthemir.github.io/admin/callback.html";
+    const scopes = "read:user";
+    
+    window.location = 
+      `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${redirect}&scope=${scopes}`;
+  };
+</script>
+
+</body>
+</html>
