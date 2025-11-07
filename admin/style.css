@@ -6,7 +6,6 @@ body {
   padding: 20px;
 }
 
-/* Темная тема */
 body.dark {
   background: #1e1e1e;
   color: #ddd;
@@ -62,16 +61,13 @@ button:hover {
   gap: 10px;
 }
 
-.project-button {
-  display: block;
-  text-align: center;
+.project-item {
   padding: 10px;
-  color: white;
-  text-decoration: none;
   border-radius: 5px;
+  color: white;
+  cursor: pointer;
 }
 
-.project-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+.project-item:hover {
+  opacity: 0.8;
 }
