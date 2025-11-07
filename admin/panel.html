@@ -6,23 +6,41 @@
 <title>Админка проектов</title>
 <link rel="stylesheet" href="style.css">
 <style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: background 0.3s, color 0.3s;
+}
+h1 { margin-bottom: 20px; }
+#controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
 #project-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 #project-form input { padding: 8px; font-size: 16px; }
 #buttons { display: flex; flex-direction: column; gap: 10px; width: 500px; }
-.project-item { display: flex; align-items: center; justify-content: space-between; padding: 5px; background: #fff; border-radius: 6px; }
+.project-item { display: flex; align-items: center; justify-content: space-between; padding: 5px; border-radius: 6px; transition: background 0.3s; }
 .project-info { display: flex; gap: 10px; align-items: center; }
 .project-name { padding: 6px 10px; border-radius: 6px; color: white; }
 button { padding: 5px 10px; cursor: pointer; border-radius: 5px; border: none; background: #0078d4; color: white; transition: 0.2s; }
 button:hover { background: #005a9e; }
-#logoutBtn { margin-bottom: 20px; background: #d9534f; }
+#logoutBtn { background: #d9534f; }
 #logoutBtn:hover { background: #b52b2b; }
+.dark { background: #1e1e1e; color: #f0f0f0; }
+.dark .project-item { background: #2c2c2c; }
+.dark button { background: #4444aa; color: #fff; }
+.dark button:hover { background: #222288; }
 </style>
 </head>
 <body>
 
 <h1>Админка проектов</h1>
 
-<button id="logoutBtn">Выйти</button>
+<div id="controls">
+  <button id="logoutBtn">Выйти</button>
+  <button id="themeBtn">🌙 Тёмная тема</button>
+</div>
 
 <div id="project-form">
   <input type="text" id="name" placeholder="Название проекта">
@@ -36,10 +54,9 @@ button:hover { background: #005a9e; }
 <script>
 const API_URL = "https://projects.dmytrothemir.workers.dev/";
 
-// Проверка авторизации при загрузке панели
+// Авторизация
 const TOKEN = localStorage.getItem("authToken");
 const loggedIn = localStorage.getItem("loggedIn");
-
 if (!TOKEN || loggedIn !== "true") {
   window.location.href = "login.html";
 }
@@ -50,6 +67,27 @@ document.getElementById("logoutBtn").onclick = () => {
   localStorage.removeItem("loggedIn");
   window.location.href = "login.html";
 };
+
+// Тема
+const themeBtn = document.getElementById("themeBtn");
+let darkMode = localStorage.getItem("theme") === "dark";
+setTheme(darkMode);
+
+themeBtn.onclick = () => {
+  darkMode = !darkMode;
+  setTheme(darkMode);
+  localStorage.setItem("theme", darkMode ? "dark" : "light");
+};
+
+function setTheme(isDark) {
+  if (isDark) {
+    document.body.classList.add("dark");
+    themeBtn.textContent = "☀️ Светлая тема";
+  } else {
+    document.body.classList.remove("dark");
+    themeBtn.textContent = "🌙 Тёмная тема";
+  }
+}
 
 // Загрузка проектов
 async function loadProjects() {
@@ -151,7 +189,6 @@ async function editProject(oldName, oldColor, oldLink) {
 async function deleteProject(name) {
   const token = localStorage.getItem("authToken");
   if (!token) return alert("Вы не авторизованы");
-
   if (!confirm(`Удалить проект "${name}"?`)) return;
 
   const res = await fetch(API_URL, {
