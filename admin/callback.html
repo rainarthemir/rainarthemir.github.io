@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Авторизация...</title></head>
+<body>
+
+<script>
+  const CLIENT_ID = "Ov23liwAi6zS07ga1ZO2";
+  const CLIENT_SECRET = "4d04a97a65cfe96d3d886b337ee6d211ff0baaa3"; // GitHub разрешает использовать в client-side ONLY для public data
+
+  const code = new URLSearchParams(window.location.search).get("code");
+
+  async function finishLogin() {
+    // GitHub: меняем code → token
+    const tokenResponse = await fetch(`https://github.com/login/oauth/access_token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        code: code
+      })
+    });
+
+    const tokenData = await tokenResponse.json();
+    const token = tokenData.access_token;
+
+    // Получаем данные пользователя
+    const userResponse = await fetch("https://api.github.com/user", {
+      headers: { Authorization: "token " + token }
+    });
+    const user = await userResponse.json();
+
+    if (user.login === "Rainarthemir") {
+      // Сохраняем токен
+      localStorage.setItem("token", token);
+      window.location = "/admin/panel.html";
+    } else {
+      document.body.innerHTML = "<h2>Доступ запрещён</h2>";
+    }
+  }
+
+  finishLogin();
+</script>
+
+</body>
+</html>
