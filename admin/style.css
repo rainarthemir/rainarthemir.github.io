@@ -1,108 +1,77 @@
 body {
   font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f0f2f5;
+  background: #f0f2f5;
   color: #333;
-}
-
-.dark-theme {
-  background-color: #1e1e1e;
-  color: #eee;
-}
-
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  background-color: #0078d4;
-  color: white;
-}
-
-header button {
-  padding: 6px 12px;
-  font-size: 14px;
-  cursor: pointer;
-  border: none;
-  border-radius: 5px;
-}
-
-.container {
+  margin: 0;
   padding: 20px;
 }
 
-.project-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* Темная тема */
+body.dark {
+  background: #1e1e1e;
+  color: #ddd;
 }
 
-.project-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+.login-container, .panel-container {
+  max-width: 500px;
+  margin: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+body.dark .login-container,
+body.dark .panel-container {
+  background: #2a2a2a;
+}
+
+h1 {
+  text-align: center;
+}
+
+input, button {
+  width: 100%;
   padding: 10px;
+  margin: 5px 0;
+  font-size: 16px;
   border-radius: 5px;
-  background-color: #fff;
-  cursor: grab;
-}
-
-.dark-theme .project-item {
-  background-color: #2c2c2c;
-}
-
-.project-item input[type="text"], 
-.project-item input[type="color"] {
-  padding: 5px;
-  border-radius: 3px;
   border: 1px solid #ccc;
 }
 
-.project-item input[type="text"] {
-  width: 200px;
-}
-
-.project-item button.delete-btn {
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  padding: 5px 8px;
-  border-radius: 4px;
+button {
   cursor: pointer;
-}
-
-.project-item button.delete-btn:hover {
-  background-color: #c0392b;
-}
-
-button#add-project {
-  margin-top: 15px;
-  padding: 8px 15px;
-  font-size: 14px;
-  cursor: pointer;
-  border: none;
-  border-radius: 5px;
   background-color: #0078d4;
   color: white;
+  border: none;
 }
 
-button#add-project:hover {
+button:hover {
   background-color: #005a9e;
 }
 
-button#save-projects {
-  margin-top: 20px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  border: none;
-  border-radius: 5px;
-  background-color: #28a745;
-  color: white;
+.error {
+  color: red;
+  text-align: center;
+  margin-top: 10px;
 }
 
-button#save-projects:hover {
-  background-color: #218838;
+.projects {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.project-button {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.project-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
 }
