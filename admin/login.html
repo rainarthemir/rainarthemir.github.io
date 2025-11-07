@@ -32,9 +32,11 @@ form.onsubmit = async (e) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password })
     });
-
     const data = await res.json();
+
     if (data.success) {
+      // Сохраняем токен для воркера projects
+      localStorage.setItem("authToken", "Bearer SECRET_TOKEN"); // Можно заменить на реальный токен
       localStorage.setItem("loggedIn", "true");
       window.location.href = "panel.html";
     } else {
