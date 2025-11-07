@@ -3,107 +3,120 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel</title>
-<link rel="stylesheet" href="style.css">
+<title>Админка проектов</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+h1 { margin-bottom: 20px; }
+#project-form { display: flex; gap: 10px; margin-bottom: 20px; }
+#project-form input { padding: 8px; font-size: 16px; }
+#buttons { display: flex; flex-direction: column; gap: 10px; width: 400px; }
+.project-item { display: flex; align-items: center; justify-content: space-between; padding: 5px; background: #fff; border-radius: 6px; }
+.project-name { padding: 6px 10px; border-radius: 6px; color: white; }
+button { padding: 5px 10px; cursor: pointer; border-radius: 5px; border: none; background: #0078d4; color: white; transition: 0.2s; }
+button:hover { background: #005a9e; }
+</style>
 </head>
 <body>
-<div class="panel-container">
-  <button id="logoutBtn">Выйти</button>
-  <h1>Панель проектов</h1>
 
-  <form id="addProjectForm">
-    <input type="text" name="name" placeholder="Название проекта" required>
-    <input type="color" name="color" value="#0078d4">
-    <button type="submit">Добавить проект</button>
-  </form>
+<h1>Админка проектов</h1>
 
-  <div id="projects" class="projects"></div>
+<div id="project-form">
+  <input type="text" id="name" placeholder="Название проекта">
+  <input type="color" id="color" value="#0078d4">
+  <button id="addBtn">Добавить</button>
 </div>
 
+<div id="buttons"></div>
+
 <script>
-if (localStorage.getItem("loggedIn") !== "true") {
-  window.location.href = "login.html";
-}
+const API_URL = "https://projects.dmytrothemir.workers.dev/";
+const TOKEN = "Bearer SECRET_TOKEN"; // вставь свой токен
 
-const authToken = localStorage.getItem("authToken");
-
-document.getElementById("logoutBtn").onclick = () => {
-  localStorage.removeItem("loggedIn");
-  localStorage.removeItem("authToken");
-  window.location.href = "login.html";
-};
-
-const form = document.getElementById("addProjectForm");
-const projectsDiv = document.getElementById("projects");
-
-async function fetchProjects() {
+async function loadProjects() {
+  const container = document.getElementById("buttons");
+  container.innerHTML = "";
   try {
-    const res = await fetch("https://projects.dmytrothemir.workers.dev/", {
-      method: "GET",
-      headers: { "Authorization": authToken }
-    });
+    const res = await fetch(API_URL);
     const data = await res.json();
-    if (data.success) renderProjects(data.projects);
+    if (!data.success) throw new Error(data.error || "Ошибка загрузки проектов");
+
+    data.projects.forEach(p => {
+      const div = document.createElement("div");
+      div.className = "project-item";
+
+      const span = document.createElement("span");
+      span.textContent = p.name;
+      span.className = "project-name";
+      span.style.backgroundColor = p.color;
+
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "Редактировать";
+      editBtn.onclick = () => editProject(p.name);
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Удалить";
+      deleteBtn.onclick = () => deleteProject(p.name);
+
+      div.appendChild(span);
+      div.appendChild(editBtn);
+      div.appendChild(deleteBtn);
+      container.appendChild(div);
+    });
+
   } catch (err) {
-    console.error(err);
+    container.innerHTML = "Ошибка: " + err.message;
   }
 }
 
-function renderProjects(projects) {
-  projectsDiv.innerHTML = "";
-  projects.forEach(p => {
-    const div = document.createElement("div");
-    div.className = "project-item";
-    div.style.backgroundColor = p.color;
-    div.textContent = p.name;
+async function addProject() {
+  const name = document.getElementById("name").value.trim();
+  const color = document.getElementById("color").value;
+  if (!name) return alert("Введите название");
 
-    // Можно добавить редактирование
-    div.onclick = () => {
-      const newName = prompt("Название", p.name);
-      const newColor = prompt("Цвет (hex)", p.color);
-      if (newName && newColor) updateProject(p.id, newName, newColor);
-    };
-
-    projectsDiv.appendChild(div);
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": TOKEN },
+    body: JSON.stringify({ name, color })
   });
+  const result = await res.json();
+  if (result.success) {
+    document.getElementById("name").value = "";
+    loadProjects();
+  } else alert(result.error);
 }
 
-async function addProject(name, color) {
-  try {
-    await fetch("https://projects.dmytrothemir.workers.dev/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": authToken },
-      body: JSON.stringify({ name, color })
-    });
-    fetchProjects();
-  } catch (err) {
-    console.error(err);
-  }
+async function editProject(oldName) {
+  const name = prompt("Новое название:", oldName);
+  if (!name) return;
+  const color = prompt("Новый цвет (hex):", "#0078d4");
+  if (!color) return;
+
+  const res = await fetch(API_URL, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", "Authorization": TOKEN },
+    body: JSON.stringify({ oldName, name, color })
+  });
+  const result = await res.json();
+  if (result.success) loadProjects();
+  else alert(result.error);
 }
 
-async function updateProject(id, name, color) {
-  try {
-    await fetch("https://projects.dmytrothemir.workers.dev/", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", "Authorization": authToken },
-      body: JSON.stringify({ id, name, color })
-    });
-    fetchProjects();
-  } catch (err) {
-    console.error(err);
-  }
+async function deleteProject(name) {
+  if (!confirm(`Удалить проект "${name}"?`)) return;
+  const res = await fetch(API_URL, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", "Authorization": TOKEN },
+    body: JSON.stringify({ name })
+  });
+  const result = await res.json();
+  if (result.success) loadProjects();
+  else alert(result.error);
 }
 
-form.onsubmit = (e) => {
-  e.preventDefault();
-  const name = form.name.value;
-  const color = form.color.value;
-  addProject(name, color);
-  form.reset();
-};
+document.getElementById("addBtn").addEventListener("click", addProject);
 
-// Загрузка проектов при старте
-fetchProjects();
+loadProjects();
 </script>
+
 </body>
 </html>
