@@ -2,131 +2,69 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Админка</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="panel-container">
+  <button id="logoutBtn">Выйти</button>
+  <h1>Панель проектов</h1>
 
-<header>
-  <h2>Админ-панель</h2>
-  <div>
-    <button id="toggle-theme">Тёмная тема</button>
-    <button id="logout">Выйти</button>
-  </div>
-</header>
+  <form id="addProjectForm">
+    <input type="text" name="title" placeholder="Название проекта" required>
+    <input type="url" name="url" placeholder="URL проекта" required>
+    <input type="color" name="color" value="#0078d4">
+    <button type="submit">Добавить проект</button>
+  </form>
 
-<div class="container">
-  <ul id="projectList" class="project-list"></ul>
-  <button id="add-project">Добавить проект</button>
-  <br>
-  <button id="save-projects">Сохранить изменения</button>
+  <div id="projects" class="projects"></div>
 </div>
 
 <script>
-const token = localStorage.getItem("token");
-if (!token) window.location = "login.html";
-
-const repo = "rainarthemir/rainarthemir.github.io";
-const filePath = "projects.json";
-
-const projectList = document.getElementById("projectList");
-
-// Тема
-let darkTheme = false;
-document.getElementById("toggle-theme").onclick = () => {
-  darkTheme = !darkTheme;
-  document.body.classList.toggle("dark-theme", darkTheme);
-};
-
-// Логаут
-document.getElementById("logout").onclick = () => {
-  localStorage.removeItem("token");
-  window.location = "login.html";
-};
-
-// Загрузка JSON
-async function loadProjects() {
-  const res = await fetch("../projects.json");
-  const projects = await res.json();
-  projectList.innerHTML = "";
-  projects.forEach(p => addProjectItem(p));
+// Проверка авторизации
+if (localStorage.getItem("loggedIn") !== "true") {
+  window.location.href = "login.html";
 }
 
-// Создание элемента проекта
-function addProjectItem(p={name:"", url:"", color:"#0078d4"}) {
-  const li = document.createElement("li");
-  li.className = "project-item";
-  li.draggable = true;
+// Logout
+document.getElementById("logoutBtn").onclick = () => {
+  localStorage.removeItem("loggedIn");
+  window.location.href = "login.html";
+};
 
-  li.innerHTML = `
-    <input type="text" class="proj-name" value="${p.name}" placeholder="Название">
-    <input type="text" class="proj-url" value="${p.url}" placeholder="URL">
-    <input type="color" class="proj-color" value="${p.color}">
-    <button class="delete-btn">Удалить</button>
-  `;
+// Добавление проектов
+const form = document.getElementById("addProjectForm");
+const projectsDiv = document.getElementById("projects");
 
-  li.querySelector(".delete-btn").onclick = () => li.remove();
+// Загружаем проекты из localStorage
+let projects = JSON.parse(localStorage.getItem("projects") || "[]");
+renderProjects();
 
-  // Drag-and-drop
-  li.addEventListener('dragstart', e => {
-    e.dataTransfer.setData("text/plain", null);
-    li.classList.add("dragging");
-  });
-  li.addEventListener('dragend', e => {
-    li.classList.remove("dragging");
-  });
-
-  projectList.appendChild(li);
-}
-
-// Drag-over сортировка
-projectList.addEventListener("dragover", e => {
+form.onsubmit = (e) => {
   e.preventDefault();
-  const dragging = document.querySelector(".dragging");
-  const afterElement = [...projectList.querySelectorAll(".project-item:not(.dragging)")]
-    .reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = e.clientY - box.top - box.height/2;
-      if(offset < 0 && offset > closest.offset) return {offset: offset, element: child};
-      return closest;
-    }, {offset: Number.NEGATIVE_INFINITY}).element;
-  if(afterElement) projectList.insertBefore(dragging, afterElement);
-  else projectList.appendChild(dragging);
-});
+  const title = form.title.value;
+  const url = form.url.value;
+  const color = form.color.value;
 
-// Добавить проект
-document.getElementById("add-project").onclick = () => addProjectItem();
-
-// Сохранение на GitHub
-document.getElementById("save-projects").onclick = async () => {
-  const items = [...projectList.querySelectorAll(".project-item")].map(li => ({
-    name: li.querySelector(".proj-name").value,
-    url: li.querySelector(".proj-url").value,
-    color: li.querySelector(".proj-color").value
-  }));
-
-  // Получаем sha файла
-  const fileInfo = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`)
-    .then(r => r.json());
-
-  const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
-    method: "PUT",
-    headers: {
-      "Authorization": "token " + token,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      message: "Update projects.json",
-      content: btoa(unescape(encodeURIComponent(JSON.stringify(items, null, 2)))),
-      sha: fileInfo.sha
-    })
-  });
-
-  if(resp.ok) alert("Сохранено!");
-  else alert("Ошибка сохранения");
+  projects.push({ title, url, color });
+  localStorage.setItem("projects", JSON.stringify(projects));
+  renderProjects();
+  form.reset();
 };
 
-loadProjects();
+function renderProjects() {
+  projectsDiv.innerHTML = "";
+  projects.forEach(p => {
+    const a = document.createElement("a");
+    a.href = p.url;
+    a.target = "_blank";
+    a.textContent = p.title;
+    a.style.backgroundColor = p.color;
+    a.className = "project-button";
+    projectsDiv.appendChild(a);
+  });
+}
 </script>
 </body>
 </html>
